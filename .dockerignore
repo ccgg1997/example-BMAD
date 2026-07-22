@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+docs
+mockups
+context
+.bmad-core
+.claude
+tests
+README.md
+CLAUDE.md
