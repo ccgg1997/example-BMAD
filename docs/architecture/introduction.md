@@ -15,3 +15,4 @@ Este documento define la arquitectura fullstack completa de **Domicilios San Ped
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-22 | 0.1 | Borrador inicial del Architecture Document derivado del PRD | Winston (Architect) |
+| 2026-07-22 | 0.2 | Ruta `/resumen/[repartidorId]` reemplazada por acordeón inline (`RepartidorAccordionRow`) tras validar mockups con el propietario — ver `docs/front-end-spec.md` | Sally (UX Expert) |

@@ -17,6 +17,7 @@ Este documento define la arquitectura fullstack completa de **Domicilios San Ped
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-22 | 0.1 | Borrador inicial del Architecture Document derivado del PRD | Winston (Architect) |
+| 2026-07-22 | 0.2 | Ruta `/resumen/[repartidorId]` reemplazada por acordeón inline (`RepartidorAccordionRow`) tras validar mockups con el propietario — ver `docs/front-end-spec.md` | Sally (UX Expert) |
 
 ## High Level Architecture
 
@@ -323,16 +324,16 @@ components:
 
 **Technology Stack:** React Server Component
 
-### DetalleRepartidor (Server Component)
+### RepartidorAccordionRow (Client Component)
 
-**Responsibility:** Lista los números de pedido registrados bajo un repartidor específico.
+**Responsibility:** Fila expandible de un repartidor dentro de `ResumenDomicilios`; al expandir, muestra los números de pedido y fecha/hora registrados a su nombre (ex "DetalleRepartidor"). _Actualizado tras validación de mockups (`docs/front-end-spec.md`): reemplaza la ruta separada `/resumen/[repartidorId]` — es un acordeón inline, no una página nueva._
 
 **Key Interfaces:**
-- Ruta `/resumen/[repartidorId]`
+- Recibe los pedidos del repartidor como prop desde `ResumenDomicilios` (mismo fetch del Server Component padre, sin round-trip HTTP adicional)
 
-**Dependencies:** `lib/db/registros.ts`
+**Dependencies:** `components/ui/accordion` (shadcn)
 
-**Technology Stack:** React Server Component
+**Technology Stack:** React Client Component (necesita estado local de expandido/colapsado), shadcn/ui
 
 ### RegistroService (lib/services/registro.ts)
 
@@ -365,12 +366,11 @@ graph TD
     SVC1 --> DB1[(PostgreSQL via Prisma)]
 
     UI2[ResumenDomicilios] --> SVC2[ResumenService]
-    UI3[DetalleRepartidor] --> SVC2
+    UI2 --> UI3[RepartidorAccordionRow - inline]
     SVC2 --> DB1
 
     MW[AuthGate Middleware] -.protege.-> UI1
     MW -.protege.-> UI2
-    MW -.protege.-> UI3
 ```
 
 ## External APIs
@@ -454,8 +454,7 @@ _Nota:_ la unicidad de `numero_pedido` a nivel de tabla implementa directamente 
 app/
 ├── login/page.tsx
 ├── registro/page.tsx           # Home tras login — RegistroSalidaForm
-├── resumen/page.tsx            # ResumenDomicilios
-│   └── [repartidorId]/page.tsx # DetalleRepartidor
+├── resumen/page.tsx            # ResumenDomicilios (incluye acordeón inline por repartidor)
 ├── api/
 │   ├── auth/login/route.ts
 │   ├── auth/logout/route.ts
@@ -465,10 +464,13 @@ app/
 └── layout.tsx
 
 components/
-├── ui/                          # primitives shadcn (button, select, input, table)
+├── ui/                          # primitives shadcn (button, select, input, table, accordion)
 ├── registro-salida-form.tsx
-└── resumen-table.tsx
+├── resumen-table.tsx
+└── repartidor-accordion-row.tsx # fila expandible con detalle de pedidos (ex DetalleRepartidor)
 ```
+
+> _Actualizado tras validación de mockups (`docs/front-end-spec.md`):_ el detalle por repartidor NO es una ruta separada — es un acordeón expandible dentro de la misma pantalla `/resumen`. Se elimina `resumen/[repartidorId]/page.tsx`.
 
 ### Component Template
 
@@ -510,8 +512,7 @@ interface RegistroSalidaFormState {
 ```text
 /login              - Login (password única)
 /registro           - Registro de Salida (home tras login)
-/resumen            - Resumen de Domicilios
-/resumen/[id]        - Detalle de pedidos por repartidor
+/resumen            - Resumen de Domicilios (incluye detalle por repartidor como acordeón inline, sin ruta propia)
 ```
 
 #### Protected Route Pattern
@@ -658,9 +659,7 @@ domicilios-san-pedro/
 ├── app/
 │   ├── login/page.tsx
 │   ├── registro/page.tsx
-│   ├── resumen/
-│   │   ├── page.tsx
-│   │   └── [repartidorId]/page.tsx
+│   ├── resumen/page.tsx         # incluye acordeón inline por repartidor, sin ruta anidada
 │   ├── api/
 │   │   ├── auth/login/route.ts
 │   │   ├── auth/logout/route.ts
@@ -670,9 +669,10 @@ domicilios-san-pedro/
 │   │   └── health/route.ts
 │   └── layout.tsx
 ├── components/
-│   ├── ui/
+│   ├── ui/                       # incluye accordion (shadcn)
 │   ├── registro-salida-form.tsx
-│   └── resumen-table.tsx
+│   ├── resumen-table.tsx
+│   └── repartidor-accordion-row.tsx
 ├── lib/
 │   ├── db/
 │   │   ├── client.ts
@@ -696,7 +696,11 @@ domicilios-san-pedro/
 ├── docs/
 │   ├── brief.md
 │   ├── prd.md
+│   ├── front-end-spec.md
 │   └── architecture.md
+├── mockups/
+│   ├── mockup1.png
+│   └── mockup2.png
 ├── .env.example
 ├── package.json
 └── README.md

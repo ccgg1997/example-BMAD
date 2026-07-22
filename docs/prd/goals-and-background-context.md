@@ -19,3 +19,4 @@ Este PRD cubre exclusivamente el primer recorte de alcance acordado con el propi
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
 | 2026-07-22 | 0.1 | Borrador inicial del PRD generado en modo YOLO a partir del Project Brief | John (PM) |
+| 2026-07-22 | 0.2 | Branding actualizado y AC de Story 2.2 ampliados (tarifa vigente, totales de semana) tras validar mockups con el propietario — ver `docs/front-end-spec.md` | Sally (UX Expert) |

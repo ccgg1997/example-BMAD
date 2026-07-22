@@ -19,9 +19,10 @@ domicilios-san-pedro/
 │   │   └── health/route.ts
 │   └── layout.tsx
 ├── components/
-│   ├── ui/
+│   ├── ui/                       # incluye accordion (shadcn)
 │   ├── registro-salida-form.tsx
-│   └── resumen-table.tsx
+│   ├── resumen-table.tsx
+│   └── repartidor-accordion-row.tsx
 ├── lib/
 │   ├── db/
 │   │   ├── client.ts
@@ -45,7 +46,11 @@ domicilios-san-pedro/
 ├── docs/
 │   ├── brief.md
 │   ├── prd.md
+│   ├── front-end-spec.md
 │   └── architecture.md
+├── mockups/
+│   ├── mockup1.png
+│   └── mockup2.png
 ├── .env.example
 ├── package.json
 └── README.md
