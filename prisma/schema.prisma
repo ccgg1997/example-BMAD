@@ -1,4 +1,3 @@
-// Prisma schema — modelos reales llegan en Story 1.3 (Repartidor, RegistroSalida, ConfiguracionSistema)
 // docs/architecture/data-models.md y docs/architecture/database-schema.md son la fuente de verdad del esquema.
 
 generator client {
@@ -8,4 +7,33 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Repartidor {
+  id        String           @id @default(uuid())
+  nombre    String           @unique
+  activo    Boolean          @default(true)
+  registros RegistroSalida[]
+
+  @@map("repartidor")
+}
+
+model RegistroSalida {
+  id             String     @id @default(uuid())
+  numeroPedido   Int        @unique @map("numero_pedido")
+  repartidorId   String     @map("repartidor_id")
+  repartidor     Repartidor @relation(fields: [repartidorId], references: [id])
+  registradoEn   DateTime   @default(now()) @map("registrado_en") @db.Timestamptz(3)
+  tarifaAplicada Decimal    @map("tarifa_aplicada") @db.Decimal(10, 2)
+
+  @@index([repartidorId])
+  @@index([registradoEn])
+  @@map("registro_salida")
+}
+
+model ConfiguracionSistema {
+  id              String  @id @default("default")
+  tarifaDomicilio Decimal @default(1000) @map("tarifa_domicilio") @db.Decimal(10, 2)
+
+  @@map("configuracion_sistema")
 }
