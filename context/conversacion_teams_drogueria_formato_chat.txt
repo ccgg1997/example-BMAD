@@ -1,0 +1,398 @@
+╔══════════════════════════════════════════════════════════════╗
+║  REUNIÓN EN MICROSOFT TEAMS                                 ║
+║  Descubrimiento inicial — Droguería San Pedro               ║
+╚══════════════════════════════════════════════════════════════╝
+
+Fecha: Sábado
+Duración estimada: 30 minutos
+
+Participantes:
+• Laura — Analista de producto de GoEcosystem
+• Pedro — Propietario de la droguería
+• Martha — Auxiliar de mostrador
+• Diego — Repartidor
+
+──────────────────────────────────────────────────────────────
+INICIO DE LA REUNIÓN
+──────────────────────────────────────────────────────────────
+
+[09:02] LAURA — Analista de producto
+Buenos días, don Pedro. Muchas gracias por conectarse.
+
+La idea de esta reunión es conocer un poco cómo trabajan actualmente. No necesitamos definir hoy exactamente qué sistema necesitan; primero queremos entender cómo funciona la droguería y en qué momentos sienten que pierden más tiempo o tienen más dificultades.
+
+──────────────────────────────────────────────────────────────
+
+[09:03] PEDRO — Propietario
+Sí, señora. Nosotros somos una droguería pequeña. Llevamos como nueve meses, más o menos.
+
+Al principio estaba yo solo, pero ya tenemos a Martha, que me ayuda en caja, y tres muchachos que hacen domicilios.
+
+Aunque realmente uno de ellos solamente viene los fines de semana. Los otros dos sí están casi todos los días, pero tampoco tienen horario fijo porque estudian.
+
+Nosotros vendemos aquí directamente, por llamadas y por WhatsApp. Lo que pasa es que todo llega al mismo teléfono.
+
+Ahí escriben para preguntar precios, pedir medicamentos, separar una cita o preguntar si vino el doctor. Entonces a veces se mezcla todo.
+
+──────────────────────────────────────────────────────────────
+
+[09:04] LAURA — Analista de producto
+Cuando dice que se mezcla todo, ¿se refiere a que reciben diferentes tipos de solicitudes en el mismo chat?
+
+──────────────────────────────────────────────────────────────
+
+[09:04] PEDRO — Propietario
+Sí. Por ejemplo, una señora pregunta cuánto cuesta un acetaminofén, después otra persona manda una fórmula médica, después alguien pregunta a qué hora viene el médico y, en medio de eso, entra un pedido para domicilio.
+
+Entonces uno puede leer el mensaje, pensar que ya lo atendió y después resulta que no.
+
+Eso nos pasó el domingo. Una persona había pedido unos pañales y unas pastillas para la presión. Nosotros creíamos que Diego se los había llevado, pero el pedido todavía estaba en el mostrador.
+
+──────────────────────────────────────────────────────────────
+
+[09:05] MARTHA — Auxiliar de mostrador
+También pasa al contrario. A veces uno prepara un pedido y dos repartidores creen que lo deben llevar.
+
+El sábado pasado Carlos y Diego estaban preguntando por el pedido 183. Carlos decía que Pedro se lo había entregado y Diego decía que yo se lo había asignado a él.
+
+Al final no sabíamos quién lo tenía.
+
+──────────────────────────────────────────────────────────────
+
+[09:06] PEDRO — Propietario
+Sí, porque nosotros manejamos los pedidos con un número que escribimos en una hoja.
+
+Pero cuando hay mucha gente, uno no siempre pone el número. A veces escribimos solamente “pedido de la señora de la esquina” o “el de los pañales”.
+
+Nosotros conocemos a casi todos los clientes del barrio, entonces normalmente sabemos quién es, pero cuando hay varios pedidos sí se vuelve complicado.
+
+──────────────────────────────────────────────────────────────
+
+[09:07] LAURA — Analista de producto
+¿Los repartidores registran en algún lugar cuáles pedidos llevan cuando salen?
+
+──────────────────────────────────────────────────────────────
+
+[09:07] PEDRO — Propietario
+No exactamente.
+
+Yo normalmente les entrego las bolsas y ellos me dicen: “Me llevo estas tres”. Cuando regresan, me dicen cuáles entregaron.
+
+Al final del día tratamos de contar cuántos domicilios hizo cada uno porque les pagamos por domicilio.
+
+──────────────────────────────────────────────────────────────
+
+[09:08] LAURA — Analista de producto
+¿El pago es siempre el mismo?
+
+──────────────────────────────────────────────────────────────
+
+[09:08] PEDRO — Propietario
+Normalmente son mil pesos por cada domicilio.
+
+Aunque si es muy lejos les damos un poco más, pero eso no pasa mucho. En los domingos también a veces les reconocemos algo adicional, dependiendo de cómo estuvo el día.
+
+Pero lo normal son mil pesos.
+
+──────────────────────────────────────────────────────────────
+
+[09:09] MARTHA — Auxiliar de mostrador
+El problema es que ellos llevan la cuenta en el celular o de memoria, y nosotros la llevamos en una hoja.
+
+Al final casi nunca coinciden.
+
+Uno dice que hizo doce, la hoja muestra diez y Pedro recuerda que fueron once. Entonces terminamos revisando los chats para saber cuáles pedidos salieron.
+
+──────────────────────────────────────────────────────────────
+
+[09:10] PEDRO — Propietario
+Y tampoco es que yo piense que ellos estén cobrando pedidos de más. Es que realmente se nos olvida apuntarlos.
+
+Especialmente los sábados.
+
+──────────────────────────────────────────────────────────────
+
+[09:10] LAURA — Analista de producto
+¿Qué sucede los sábados?
+
+──────────────────────────────────────────────────────────────
+
+[09:10] PEDRO — Propietario
+Los sábados viene un médico general de ocho de la mañana a una de la tarde. Él atiende aquí en un consultorio pequeño que tenemos en la parte de atrás.
+
+Entonces esos días llega mucha gente.
+
+Algunos vienen con cita, otros vienen a preguntar si el doctor todavía puede atenderlos y otros llegan directamente. Mientras tanto también tenemos las ventas normales y los domicilios.
+
+──────────────────────────────────────────────────────────────
+
+[09:11] MARTHA — Auxiliar de mostrador
+Las citas las anotamos en una agenda.
+
+Aunque algunas quedan en WhatsApp porque el cliente dice que confirma después. Cuando llega el sábado toca revisar la agenda y el teléfono.
+
+A veces dos personas creen que tienen la misma hora.
+
+──────────────────────────────────────────────────────────────
+
+[09:12] PEDRO — Propietario
+Pero lo de las citas no es tan grave. El doctor normalmente los atiende a todos.
+
+El problema es que la gente se molesta porque llega a las nueve y termina entrando a las diez y media.
+
+Además, algunos reservan y no vienen. El médico dice que deberíamos confirmarles el viernes, pero se nos olvida cuando hay muchos pedidos.
+
+──────────────────────────────────────────────────────────────
+
+[09:13] LAURA — Analista de producto
+Entonces los sábados tienen, al mismo tiempo, las consultas, las ventas en mostrador, las solicitudes por WhatsApp y la salida de domicilios.
+
+──────────────────────────────────────────────────────────────
+
+[09:13] PEDRO — Propietario
+Exactamente. Y ahí es donde más se nos pierde la información.
+
+Por ejemplo, el repartidor sale con cuatro pedidos, pero solamente apuntamos dos. Después regresa, toma otros tres y nadie sabe si esos tres ya quedaron sumados a los anteriores.
+
+Al final del día toca preguntarle cuántos hizo.
+
+──────────────────────────────────────────────────────────────
+
+[09:14] LAURA — Analista de producto
+Cuando un repartidor recibe un pedido, ¿qué información necesitaría registrar?
+
+──────────────────────────────────────────────────────────────
+
+[09:14] PEDRO — Propietario
+Yo pensaría que el número del pedido. No necesitamos poner todo.
+
+La dirección ya está escrita en la bolsa o está en el WhatsApp. Tampoco quisiera que tengan que llenar muchas cosas porque los muchachos se desesperan y no lo usan.
+
+Sería simplemente que antes de salir digan: “Yo soy Diego y me llevo el pedido 183, el 184 y el 187”.
+
+──────────────────────────────────────────────────────────────
+
+[09:15] DIEGO — Repartidor
+Sí, algo rápido.
+
+Porque nosotros normalmente estamos en la puerta con el casco puesto y Pedro nos entrega dos o tres bolsas.
+
+Si toca escribir el nombre del cliente, el teléfono, la dirección y cuánto pagó, nadie lo va a llenar.
+
+Pero seleccionar el nombre y poner el número del pedido sí se puede.
+
+──────────────────────────────────────────────────────────────
+
+[09:16] LAURA — Analista de producto
+¿Cada pedido tiene un número único?
+
+──────────────────────────────────────────────────────────────
+
+[09:16] MARTHA — Auxiliar de mostrador
+En teoría sí.
+
+Pero nosotros comenzamos desde uno cada día. Entonces hoy puede existir el pedido 25 y mañana también.
+
+──────────────────────────────────────────────────────────────
+
+[09:17] PEDRO — Propietario
+Eso lo podríamos cambiar. Podríamos poner la fecha o seguir la numeración sin reiniciarla.
+
+El programa que tenemos para caja sí genera un consecutivo, pero no siempre hacemos el pedido primero en el programa. A veces lo registramos después de que el repartidor regresa.
+
+──────────────────────────────────────────────────────────────
+
+[09:18] LAURA — Analista de producto
+¿El sistema de caja controla también los domicilios?
+
+──────────────────────────────────────────────────────────────
+
+[09:18] PEDRO — Propietario
+No. Sirve para registrar la venta y sacar el recibo. También tiene los productos, pero nosotros no usamos todas las funciones.
+
+El inventario todavía lo manejamos en un cuaderno porque cuando se vende algo por WhatsApp no siempre lo registramos inmediatamente en el sistema.
+
+Después Martha pasa algunas ventas, pero no todas quedan el mismo día.
+
+──────────────────────────────────────────────────────────────
+
+[09:19] MARTHA — Auxiliar de mostrador
+También tenemos productos que se vencen y nos damos cuenta cuando estamos organizando las estanterías.
+
+Pedro quiere que revisemos las fechas cada mes, pero no siempre alcanzamos.
+
+Hay unas vitaminas que vencen el próximo mes y todavía tenemos varias cajas.
+
+──────────────────────────────────────────────────────────────
+
+[09:20] PEDRO — Propietario
+Eso sí me gustaría verlo después. Que el sistema nos avise cuáles medicamentos están cerca de vencerse.
+
+Pero no sé si eso sea muy complicado porque habría que ingresar los lotes y las fechas.
+
+Por ahora lo que más nos genera discusiones es lo de los domicilios y el pago de los muchachos.
+
+──────────────────────────────────────────────────────────────
+
+[09:21] LAURA — Analista de producto
+¿Actualmente cómo hacen el pago?
+
+──────────────────────────────────────────────────────────────
+
+[09:21] PEDRO — Propietario
+El domingo en la noche o el lunes.
+
+Miramos la hoja y calculamos la cantidad de domicilios por mil pesos. Si hicieron uno lejano, agregamos el valor manualmente.
+
+La semana pasada Carlos decía que hizo 41 domicilios y nosotros solamente teníamos 35 registrados.
+
+Le terminamos pagando 39 porque encontramos cuatro pedidos más revisando WhatsApp, pero nunca supimos qué pasó con los otros dos.
+
+──────────────────────────────────────────────────────────────
+
+[09:22] LAURA — Analista de producto
+Además del número de pedidos, ¿necesitan registrar si el domicilio fue entregado?
+
+──────────────────────────────────────────────────────────────
+
+[09:22] PEDRO — Propietario
+Más adelante sí podría servir.
+
+A veces el cliente no está o dice que ya no necesita el medicamento. En esos casos el repartidor vuelve con el pedido y nosotros normalmente no le pagamos el domicilio completo.
+
+Aunque depende. Si fue muy lejos, sí le reconocemos algo.
+
+Pero para comenzar podríamos solamente registrar cuáles se lleva. Después miramos cómo manejar los devueltos.
+
+──────────────────────────────────────────────────────────────
+
+[09:23] DIEGO — Repartidor
+Sería bueno poder marcar cuando uno regresa, porque a veces el cliente paga por transferencia y Martha pregunta si ya entregamos.
+
+También hay personas que dicen que pagaron, pero la transferencia todavía no aparece.
+
+──────────────────────────────────────────────────────────────
+
+[09:24] PEDRO — Propietario
+Ese es otro tema.
+
+Tenemos efectivo, transferencias y datáfono. Al final del día las ventas no siempre coinciden con lo que hay en caja.
+
+Pero primero tendríamos que organizar los pedidos, porque ahora mismo todo depende de lo que recordemos.
+
+──────────────────────────────────────────────────────────────
+
+[09:25] LAURA — Analista de producto
+Quiero confirmar lo que entiendo.
+
+Actualmente existen varios problemas: mensajes mezclados en WhatsApp, citas médicas difíciles de organizar, productos próximos a vencerse, diferencias en los pagos y falta de seguimiento de los domicilios.
+
+Sin embargo, el problema más frecuente y más sencillo de atender inicialmente sería saber qué pedidos lleva cada repartidor y cuántos domicilios tiene acumulados.
+
+¿Es correcto?
+
+──────────────────────────────────────────────────────────────
+
+[09:26] PEDRO — Propietario
+Sí. Eso sería lo primero.
+
+No quiero arrancar con un sistema demasiado grande porque después nadie lo usa.
+
+──────────────────────────────────────────────────────────────
+
+[09:26] LAURA — Analista de producto
+Entonces podríamos comenzar con un tablero muy sencillo, que funcione desde el celular o desde una tableta ubicada cerca de la salida.
+
+Antes de irse, el repartidor seleccionaría su nombre e ingresaría los números de los pedidos que lleva.
+
+Ejemplo:
+
+    Repartidor: Diego
+
+    Pedidos:
+    183
+    184
+    187
+
+    [ REGISTRAR SALIDA ]
+
+El sistema guardaría esos pedidos y evitaría que el mismo número quede asignado simultáneamente a dos repartidores.
+
+──────────────────────────────────────────────────────────────
+
+[09:27] PEDRO — Propietario
+Eso nos serviría.
+
+¿Y yo podría ver al final cuántos lleva cada uno?
+
+──────────────────────────────────────────────────────────────
+
+[09:27] LAURA — Analista de producto
+Sí. Habría una segunda sección con un resumen sencillo:
+
+    Carlos: 12 pedidos — $12.000
+    Diego:   9 pedidos —  $9.000
+    Andrés:  6 pedidos —  $6.000
+
+Inicialmente usaríamos la tarifa estándar de mil pesos por pedido.
+
+Los domicilios especiales o los pagos adicionales podrían manejarse posteriormente, cuando entendamos mejor las excepciones.
+
+──────────────────────────────────────────────────────────────
+
+[09:28] MARTHA — Auxiliar de mostrador
+¿También aparecerían los números de los pedidos? Porque a veces necesitamos buscar quién se llevó uno.
+
+──────────────────────────────────────────────────────────────
+
+[09:28] LAURA — Analista de producto
+Sí. Se podría consultar cada repartidor y ver los pedidos registrados bajo su nombre.
+
+Para la primera versión no incluiríamos dirección, teléfono, medicamentos, ubicación ni información clínica.
+
+Solamente:
+
+• Repartidor
+• Número del pedido
+• Fecha y hora de registro
+• Cantidad acumulada
+• Valor estimado por pagar
+
+──────────────────────────────────────────────────────────────
+
+[09:29] PEDRO — Propietario
+Me parece bien. Mientras sea rápido.
+
+Después podríamos mirar lo de las citas del médico, porque él quiere comenzar a venir también los miércoles por la tarde.
+
+──────────────────────────────────────────────────────────────
+
+[09:29] LAURA — Analista de producto
+Perfecto. Para esta primera fase nos enfocaremos exclusivamente en el registro de salidas y el resumen de domicilios.
+
+En una segunda sesión podemos revisar la operación de las citas, los mensajes de WhatsApp, las fechas de vencimiento y la conciliación de los diferentes medios de pago.
+
+──────────────────────────────────────────────────────────────
+FIN DE LA REUNIÓN
+──────────────────────────────────────────────────────────────
+
+ACUERDO PRINCIPAL
+
+Crear un tablero sencillo con dos áreas:
+
+1. REGISTRO DE SALIDA
+   El repartidor selecciona su nombre e ingresa uno o varios números de pedido.
+
+2. RESUMEN DE DOMICILIOS
+   Don Pedro consulta cuántos pedidos lleva cada repartidor y el valor estimado por pagar.
+
+Regla inicial:
+Cada domicilio registrado tiene un valor de $1.000.
+
+Fuera del alcance inicial:
+• Gestión de citas médicas
+• Control de inventario
+• Medicamentos próximos a vencer
+• Estados de entrega
+• Conciliación de pagos
+• Integración con WhatsApp
