@@ -1,0 +1,13 @@
+# Copiar a `rclone.conf` (gitignored) y completar con credenciales reales
+# del almacenamiento externo — nunca versionar ese archivo.
+#
+# Ejemplo para DigitalOcean Spaces (S3-compatible):
+#
+# [spaces]
+# type = s3
+# provider = DigitalOcean
+# access_key_id = TU_ACCESS_KEY
+# secret_access_key = TU_SECRET_KEY
+# endpoint = nyc3.digitaloceanspaces.com
+#
+# Luego en .env: RCLONE_REMOTE_PATH=spaces:nombre-del-bucket/backups

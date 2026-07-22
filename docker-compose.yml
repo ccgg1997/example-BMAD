@@ -34,6 +34,18 @@ services:
     expose:
       - "3000"
 
+  backup:
+    build: ./docker/backup
+    restart: unless-stopped
+    init: true # crond como PID 1 falla ("setpgid: Operation not permitted") sin un init real de por medio
+    env_file: .env
+    volumes:
+      - backup_dumps:/backups
+      - ./rclone.conf:/config/rclone/rclone.conf:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
@@ -51,5 +63,6 @@ services:
 
 volumes:
   pgdata:
+  backup_dumps:
   caddy_data:
   caddy_config:
