@@ -1,51 +1,157 @@
-name: Deploy
+name: Deploy production
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_DB: domicilios
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U user -d domicilios"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      DATABASE_URL: postgresql://user:pass@localhost:5432/domicilios
-      APP_PASSWORD: ci-test-password
-      SESSION_SECRET: ci-test-session-secret-not-for-production
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test
-
   deploy:
-    needs: test
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
+      - name: Verify this commit came from the manual test-to-main PR
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const deployedSha = context.payload.workflow_run.head_sha;
+
+            const { data: sourceWorkflow } = await github.rest.actions.getWorkflow({
+              owner,
+              repo,
+              workflow_id: context.payload.workflow_run.workflow_id,
+            });
+
+            if (sourceWorkflow.path !== ".github/workflows/ci.yaml") {
+              throw new Error(
+                `Refusing result from unexpected workflow path: ${sourceWorkflow.path}`
+              );
+            }
+
+            const { data: main } = await github.rest.repos.getBranch({
+              owner,
+              repo,
+              branch: "main",
+            });
+
+            if (main.commit.sha !== deployedSha) {
+              throw new Error(
+                `CI validated ${deployedSha}, but main is now ${main.commit.sha}. ` +
+                "A newer CI run must finish before deployment."
+              );
+            }
+
+            const pullRequests = await github.paginate(
+              github.rest.repos.listPullRequestsAssociatedWithCommit,
+              {
+                owner,
+                repo,
+                commit_sha: deployedSha,
+                per_page: 100,
+              }
+            );
+
+            const releasePullRequest = pullRequests.find((pullRequest) =>
+              pullRequest.merged_at &&
+              pullRequest.base.ref === "main" &&
+              pullRequest.head.ref === "test" &&
+              pullRequest.head.repo?.full_name === `${owner}/${repo}`
+            );
+
+            if (!releasePullRequest) {
+              throw new Error(
+                "Production deploy blocked: main was not updated by a merged test -> main pull request."
+              );
+            }
+
+            core.notice(
+              `Deploy authorized by manually merged PR #${releasePullRequest.number}.`
+            );
+
+      - name: Require deployment secrets
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST_FINGERPRINT: ${{ secrets.VPS_HOST_FINGERPRINT }}
+        run: |
+          if [[ -z "$VPS_HOST" || -z "$VPS_USER" || -z "$VPS_SSH_KEY" || -z "$VPS_HOST_FINGERPRINT" ]]; then
+            echo "::error::Missing one or more required VPS deployment secrets"
+            exit 1
+          fi
+
+      - name: Deploy main via SSH
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          fingerprint: ${{ secrets.VPS_HOST_FINGERPRINT }}
+          envs: DEPLOY_SHA
           script: |
+            set -eu
             cd /srv/domicilios-san-pedro
-            git pull
+            git fetch origin main
+            test "$(git rev-parse origin/main)" = "$DEPLOY_SHA"
+            git switch main
+            git merge --ff-only "$DEPLOY_SHA"
+            test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"
+            test -z "$(git status --porcelain)"
+
+            docker compose build app
+            docker compose up -d db
+
+            db_container="$(docker compose ps -q db)"
+            test -n "$db_container"
+            attempt=1
+            while [ "$attempt" -le 30 ]; do
+              db_status="$(docker inspect --format='{{.State.Health.Status}}' "$db_container")"
+              [ "$db_status" = "healthy" ] && break
+              attempt=$((attempt + 1))
+              sleep 2
+            done
+            test "$db_status" = "healthy"
+
+            database_url="$(docker compose run --rm --no-deps app sh -c 'printf "%s" "$DATABASE_URL"')"
+            test -n "$database_url"
+            network_name="$(docker inspect --format='{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' "$db_container" | sed -n '1p')"
+            test -n "$network_name"
+
+            migration_image="domicilios-migrate:$DEPLOY_SHA"
+            cleanup_migration_image() {
+              docker image rm "$migration_image" >/dev/null 2>&1 || true
+            }
+            trap cleanup_migration_image EXIT
+
+            docker build --target builder --tag "$migration_image" .
+            docker run --rm \
+              --network "$network_name" \
+              --env "DATABASE_URL=$database_url" \
+              "$migration_image" \
+              npx prisma migrate deploy
+
+            docker run --rm \
+              --network "$network_name" \
+              --env "DATABASE_URL=$database_url" \
+              "$migration_image" \
+              npx prisma db seed
+
             docker compose up -d --build

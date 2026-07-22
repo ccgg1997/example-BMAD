@@ -1,36 +1,236 @@
 name: CI
 
 on:
-  push:
-    branches-ignore: [main]
   pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILDER_IMAGE: bmad-ci-builder:${{ github.run_id }}-${{ github.run_attempt }}
+  APP_IMAGE: bmad-ci-app:${{ github.run_id }}-${{ github.run_attempt }}
+  CI_NETWORK: bmad-ci-${{ github.run_id }}-${{ github.run_attempt }}
+  CI_DB_CONTAINER: bmad-ci-db-${{ github.run_id }}-${{ github.run_attempt }}
+  CI_APP_CONTAINER: bmad-ci-web-${{ github.run_id }}-${{ github.run_attempt }}
+  DATABASE_URL: postgresql://bmad_ci:bmad_ci@db:5432/bmad_ci
+  APP_PASSWORD: bmad-ci-password
+  SESSION_SECRET: bmad-ci-session-secret-only-for-automated-tests-2026
 
 jobs:
-  test:
+  validate:
+    name: Container build, tests and screen policy
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: pass
-          POSTGRES_DB: domicilios
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U user -d domicilios"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      DATABASE_URL: postgresql://user:pass@localhost:5432/domicilios
-      APP_PASSWORD: ci-test-password
-      SESSION_SECRET: ci-test-session-secret-not-for-production
+    timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # En pull_request, checkout usa el merge sintético con develop. Así se
+      # compila y prueba el resultado que realmente se incorporaría.
+      - name: Checkout candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          node-version: 20
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test
+          persist-credentials: false
+
+      - name: Build the Docker builder stage
+        run: docker build --target builder --tag "$BUILDER_IMAGE" .
+
+      - name: Start an isolated PostgreSQL container
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker network create "$CI_NETWORK"
+          docker run --detach \
+            --name "$CI_DB_CONTAINER" \
+            --network "$CI_NETWORK" \
+            --network-alias db \
+            --env POSTGRES_USER=bmad_ci \
+            --env POSTGRES_PASSWORD=bmad_ci \
+            --env POSTGRES_DB=bmad_ci \
+            --health-cmd "pg_isready -U bmad_ci -d bmad_ci" \
+            --health-interval 2s \
+            --health-timeout 3s \
+            --health-retries 30 \
+            postgres:16-alpine
+
+          for attempt in {1..30}; do
+            status="$(docker inspect --format='{{.State.Health.Status}}' "$CI_DB_CONTAINER")"
+            if [[ "$status" == "healthy" ]]; then
+              exit 0
+            fi
+            if [[ "$status" == "unhealthy" ]]; then
+              break
+            fi
+            echo "::debug::PostgreSQL health attempt $attempt: $status"
+            sleep 2
+          done
+
+          docker logs "$CI_DB_CONTAINER"
+          echo "::error::PostgreSQL did not become healthy"
+          exit 1
+
+      - name: Apply database migrations inside the builder container
+        run: |
+          docker run --rm \
+            --network "$CI_NETWORK" \
+            --env DATABASE_URL \
+            "$BUILDER_IMAGE" \
+            npx prisma migrate deploy
+
+      - name: Seed the isolated test database inside the container
+        run: |
+          docker run --rm \
+            --network "$CI_NETWORK" \
+            --env DATABASE_URL \
+            "$BUILDER_IMAGE" \
+            npx prisma db seed
+
+      # tests/ está excluido de la imagen de producción mediante .dockerignore.
+      # Se monta read-only para ejecutar las pruebas con las dependencias y el
+      # código exactos que Docker acaba de compilar.
+      - name: Run lint and tests inside the container
+        run: |
+          docker run --rm \
+            --network "$CI_NETWORK" \
+            --env DATABASE_URL \
+            --env APP_PASSWORD \
+            --env SESSION_SECRET \
+            --env SENTRY_DSN= \
+            --env NODE_ENV=test \
+            --volume "$GITHUB_WORKSPACE/tests:/app/tests:ro" \
+            "$BUILDER_IMAGE" \
+            sh -c "npm run lint && npm run test"
+
+      - name: Build the final production container
+        run: docker build --target runner --tag "$APP_IMAGE" .
+
+      - name: Start the final production container
+        run: |
+          docker run --detach \
+            --name "$CI_APP_CONTAINER" \
+            --network "$CI_NETWORK" \
+            --publish 127.0.0.1:3000:3000 \
+            --env DATABASE_URL \
+            --env APP_PASSWORD \
+            --env SESSION_SECRET \
+            --env SENTRY_DSN= \
+            "$APP_IMAGE"
+
+      - name: Wait for the application
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..60}; do
+            if [[ "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/api/health || true)" == "200" ]]; then
+              exit 0
+            fi
+            if [[ "$(docker inspect --format='{{.State.Running}}' "$CI_APP_CONTAINER")" != "true" ]]; then
+              break
+            fi
+            echo "::debug::Application readiness attempt $attempt"
+            sleep 2
+          done
+
+          docker logs "$CI_APP_CONTAINER"
+          echo "::error::The application did not become ready"
+          exit 1
+
+      - name: Reject bmad on registro or resumen
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cookie_jar="$RUNNER_TEMP/bmad-ci-cookies.txt"
+          login_response="$RUNNER_TEMP/bmad-ci-login-response.txt"
+          registro_html="$RUNNER_TEMP/bmad-ci-registro.html"
+          resumen_html="$RUNNER_TEMP/bmad-ci-resumen.html"
+          cookie_header=""
+          : > "$cookie_jar"
+
+          # Cuando exista autenticación, entra con las credenciales efímeras de
+          # CI. Un 404 se tolera mientras esa historia aún no esté implementada.
+          login_status="$(curl --silent --show-error \
+            --output "$login_response" \
+            --write-out '%{http_code}' \
+            --cookie-jar "$cookie_jar" \
+            --header 'Content-Type: application/json' \
+            --data "{\"password\":\"$APP_PASSWORD\"}" \
+            http://127.0.0.1:3000/api/auth/login)"
+
+          if [[ "$login_status" != "200" && "$login_status" != "204" && "$login_status" != "404" ]]; then
+            echo "::error::CI login returned HTTP $login_status"
+            exit 1
+          fi
+
+          if [[ "$login_status" == "200" || "$login_status" == "204" ]]; then
+            # Envía la cookie explícitamente: el contenedor se prueba por HTTP
+            # local aunque producción pueda marcar la sesión como Secure.
+            cookie_header="$(sed 's/^#HttpOnly_//' "$cookie_jar" \
+              | awk -F '\t' '!/^#/ && NF >= 7 { print $6 "=" $7 }' \
+              | paste -sd ';' -)"
+            if [[ -z "$cookie_header" ]]; then
+              echo "::error::CI login succeeded but did not issue a session cookie"
+              exit 1
+            fi
+          fi
+
+          fetch_screen() {
+            local route="$1"
+            local output="$2"
+            local -a auth_args=()
+            local metadata
+            local status
+            local effective_url
+            local expected_url="http://127.0.0.1:3000$route"
+
+            if [[ -n "$cookie_header" ]]; then
+              auth_args=(--header "Cookie: $cookie_header")
+            fi
+
+            metadata="$(curl --silent --show-error --location \
+              "${auth_args[@]}" \
+              --output "$output" \
+              --write-out '%{http_code} %{url_effective}' \
+              "http://127.0.0.1:3000$route")"
+            status="${metadata%% *}"
+            effective_url="${metadata#* }"
+
+            if [[ "$status" != "200" ]]; then
+              echo "::error::$route returned HTTP $status"
+              return 1
+            fi
+            if [[ "$effective_url" != "$expected_url" && "$effective_url" != "$expected_url/" ]]; then
+              echo "::error::$route redirected to $effective_url instead of rendering its screen"
+              return 1
+            fi
+          }
+
+          fetch_screen /registro "$registro_html"
+          fetch_screen /resumen "$resumen_html"
+
+          if grep --fixed-strings --ignore-case --quiet "bmad" "$registro_html" "$resumen_html"; then
+            echo "::error::The forbidden word 'bmad' appears on /registro or /resumen"
+            exit 1
+          fi
+
+          echo "Both screens render and neither contains the forbidden word 'bmad'."
+
+      - name: Show container logs after a failure
+        if: failure()
+        run: |
+          docker logs "$CI_APP_CONTAINER" 2>&1 || true
+          docker logs "$CI_DB_CONTAINER" 2>&1 || true
+
+      - name: Clean up CI containers
+        if: always()
+        run: |
+          docker rm --force "$CI_APP_CONTAINER" >/dev/null 2>&1 || true
+          docker rm --force "$CI_DB_CONTAINER" >/dev/null 2>&1 || true
+          docker network rm "$CI_NETWORK" >/dev/null 2>&1 || true
