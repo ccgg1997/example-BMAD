@@ -148,4 +148,10 @@ jobs:
               "$migration_image" \
               npx prisma migrate deploy
 
+            docker run --rm \
+              --network "$network_name" \
+              --env "DATABASE_URL=$database_url" \
+              "$migration_image" \
+              npx prisma db seed
+
             docker compose up -d --build

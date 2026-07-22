@@ -32,15 +32,47 @@ jobs:
         with:
           script: |
             const { owner, repo } = context.repo;
+            const workflowPath = ".github/workflows/ci.yaml";
             const { data: sourceWorkflow } = await github.rest.actions.getWorkflow({
               owner,
               repo,
               workflow_id: context.payload.workflow_run.workflow_id,
             });
 
-            if (sourceWorkflow.path !== ".github/workflows/ci.yaml") {
+            if (sourceWorkflow.path !== workflowPath) {
               throw new Error(
                 `Refusing result from unexpected workflow path: ${sourceWorkflow.path}`
+              );
+            }
+
+            const testedSha = context.payload.workflow_run.head_sha;
+            const trustedRef = context.payload.repository.default_branch;
+            const [{ data: testedWorkflow }, { data: trustedWorkflow }] =
+              await Promise.all([
+                github.rest.repos.getContent({
+                  owner,
+                  repo,
+                  path: workflowPath,
+                  ref: testedSha,
+                }),
+                github.rest.repos.getContent({
+                  owner,
+                  repo,
+                  path: workflowPath,
+                  ref: trustedRef,
+                }),
+              ]);
+
+            if (
+              Array.isArray(testedWorkflow) ||
+              Array.isArray(trustedWorkflow) ||
+              testedWorkflow.type !== "file" ||
+              trustedWorkflow.type !== "file" ||
+              testedWorkflow.sha !== trustedWorkflow.sha
+            ) {
+              throw new Error(
+                `The tested ${workflowPath} differs from trusted ${trustedRef}. ` +
+                "Promote workflow changes through a separately reviewed bootstrap PR."
               );
             }
 
