@@ -1,0 +1,201 @@
+name: Promote develop to test
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: write
+  statuses: write
+
+concurrency:
+  group: promote-develop-to-test
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      # El trigger selecciona por nombre. Esta comprobación impide que otro
+      # workflow llamado "CI" pueda activar una promoción privilegiada.
+      - name: Verify the source workflow
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { data: sourceWorkflow } = await github.rest.actions.getWorkflow({
+              owner,
+              repo,
+              workflow_id: context.payload.workflow_run.workflow_id,
+            });
+
+            if (sourceWorkflow.path !== ".github/workflows/ci.yaml") {
+              throw new Error(
+                `Refusing result from unexpected workflow path: ${sourceWorkflow.path}`
+              );
+            }
+
+      - name: Require the narrowly scoped promotion token
+        shell: bash
+        env:
+          PROMOTION_TOKEN: ${{ secrets.PROMOTION_TOKEN }}
+        run: |
+          if [[ -z "$PROMOTION_TOKEN" ]]; then
+            echo "::error::Missing PROMOTION_TOKEN secret"
+            exit 1
+          fi
+
+      # GITHUB_TOKEN no puede modificar refs que introducen archivos de
+      # workflows. PROMOTION_TOKEN solo necesita Contents + Workflows (write)
+      # sobre este repositorio; no recibe permisos para PRs ni estados.
+      - name: Fast-forward test to the exact validated commit
+        id: advance_test
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          github-token: ${{ secrets.PROMOTION_TOKEN }}
+          result-encoding: string
+          script: |
+            const { owner, repo } = context.repo;
+            const testedSha = context.payload.workflow_run.head_sha;
+
+            const { data: develop } = await github.rest.repos.getBranch({
+              owner,
+              repo,
+              branch: "develop",
+            });
+
+            if (develop.commit.sha !== testedSha) {
+              core.notice(
+                `Skipping stale CI result ${testedSha}; develop is now ${develop.commit.sha}.`
+              );
+              return "stale";
+            }
+
+            let testRef;
+            try {
+              const response = await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: "heads/test",
+              });
+              testRef = response.data;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            if (!testRef) {
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: "refs/heads/test",
+                sha: testedSha,
+              });
+            } else if (testRef.object.sha !== testedSha) {
+              try {
+                await github.rest.git.updateRef({
+                  owner,
+                  repo,
+                  ref: "heads/test",
+                  sha: testedSha,
+                  force: false,
+                });
+              } catch (error) {
+                if (error.status === 422) {
+                  throw new Error(
+                    "test cannot be fast-forwarded to the validated develop commit. " +
+                    "Resolve the branch divergence/conflict without force-pushing."
+                  );
+                }
+                throw error;
+              }
+            }
+
+            return "promoted";
+
+      # El PR lo crea github-actions[bot], no la identidad del PAT. Así una
+      # persona puede revisarlo y aprobarlo manualmente.
+      - name: Mark the release and open the production PR
+        if: steps.advance_test.outputs.result == 'promoted'
+        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const testedSha = context.payload.workflow_run.head_sha;
+            const sourceRun = context.payload.workflow_run.html_url;
+
+            const [{ data: develop }, { data: testRef }] = await Promise.all([
+              github.rest.repos.getBranch({ owner, repo, branch: "develop" }),
+              github.rest.git.getRef({ owner, repo, ref: "heads/test" }),
+            ]);
+
+            if (
+              develop.commit.sha !== testedSha ||
+              testRef.object.sha !== testedSha
+            ) {
+              throw new Error(
+                "develop or test moved after validation; a new CI run must promote it."
+              );
+            }
+
+            await github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha: testedSha,
+              state: "success",
+              context: "promotion/release-ready",
+              description: "CI passed and this exact commit was promoted to test",
+              target_url: sourceRun,
+            });
+
+            const title = "release: promover test a producción";
+            const body = [
+              "## Promoción a producción",
+              "",
+              `- Commit validado: \`${testedSha}\``,
+              `- CI de origen: ${sourceRun}`,
+              "- Rama validada y promovida: `develop` → `test`",
+              "",
+              "Este PR **no se fusiona automáticamente**. Requiere revisión y aceptación manual.",
+            ].join("\n");
+
+            const { data: openPullRequests } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              head: `${owner}:test`,
+              base: "main",
+              per_page: 10,
+            });
+
+            if (openPullRequests.length > 0) {
+              const pullRequest = openPullRequests[0];
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pullRequest.number,
+                title,
+                body,
+              });
+              core.notice(`Updated existing production PR #${pullRequest.number}.`);
+            } else {
+              const { data: pullRequest } = await github.rest.pulls.create({
+                owner,
+                repo,
+                title,
+                head: "test",
+                base: "main",
+                body,
+                draft: false,
+                maintainer_can_modify: false,
+              });
+              core.notice(`Opened production PR #${pullRequest.number}.`);
+            }
