@@ -22,6 +22,11 @@ interface RegistroSalidaFormProps {
   repartidores: Repartidor[];
 }
 
+function nombrePorId(repartidores: Repartidor[], id: string | null): string {
+  if (!id) return "otro repartidor";
+  return repartidores.find((repartidor) => repartidor.id === id)?.nombre ?? "otro repartidor";
+}
+
 export function RegistroSalidaForm({ repartidores }: RegistroSalidaFormProps) {
   const [repartidorId, setRepartidorId] = useState<string | null>(null);
   const [numeroActual, setNumeroActual] = useState("");
@@ -120,9 +125,14 @@ export function RegistroSalidaForm({ repartidores }: RegistroSalidaFormProps) {
       )}
 
       {conflictos.length > 0 && (
-        <p className="text-sm text-destructive">
-          Pedido(s) ya asignado(s): {conflictos.map((c) => c.numeroPedido).join(", ")}
-        </p>
+        <ul className="flex flex-col gap-1">
+          {conflictos.map((conflicto) => (
+            <li key={conflicto.numeroPedido} className="text-sm text-destructive">
+              Pedido {conflicto.numeroPedido} ya está asignado a{" "}
+              {nombrePorId(repartidores, conflicto.asignadoA)}.
+            </li>
+          ))}
+        </ul>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
