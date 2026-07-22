@@ -84,6 +84,14 @@ jobs:
             "$BUILDER_IMAGE" \
             npx prisma migrate deploy
 
+      - name: Seed the isolated test database inside the container
+        run: |
+          docker run --rm \
+            --network "$CI_NETWORK" \
+            --env DATABASE_URL \
+            "$BUILDER_IMAGE" \
+            npx prisma db seed
+
       # tests/ está excluido de la imagen de producción mediante .dockerignore.
       # Se monta read-only para ejecutar las pruebas con las dependencias y el
       # código exactos que Docker acaba de compilar.
