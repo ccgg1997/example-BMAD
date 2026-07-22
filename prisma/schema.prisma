@@ -1,0 +1,11 @@
+// Prisma schema — modelos reales llegan en Story 1.3 (Repartidor, RegistroSalida, ConfiguracionSistema)
+// docs/architecture/data-models.md y docs/architecture/database-schema.md son la fuente de verdad del esquema.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
