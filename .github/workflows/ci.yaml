@@ -8,6 +8,24 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: domicilios
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d domicilios"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://user:pass@localhost:5432/domicilios
+      APP_PASSWORD: ci-test-password
+      SESSION_SECRET: ci-test-session-secret-not-for-production
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
