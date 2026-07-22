@@ -44,82 +44,84 @@ jobs:
               );
             }
 
-      - name: Require the narrowly scoped promotion token
+      - name: Require the repository-scoped promotion key
         shell: bash
         env:
-          PROMOTION_TOKEN: ${{ secrets.PROMOTION_TOKEN }}
+          PROMOTION_DEPLOY_KEY: ${{ secrets.PROMOTION_DEPLOY_KEY }}
         run: |
-          if [[ -z "$PROMOTION_TOKEN" ]]; then
-            echo "::error::Missing PROMOTION_TOKEN secret"
+          if [[ -z "$PROMOTION_DEPLOY_KEY" ]]; then
+            echo "::error::Missing PROMOTION_DEPLOY_KEY secret"
             exit 1
           fi
 
-      # GITHUB_TOKEN no puede modificar refs que introducen archivos de
-      # workflows. PROMOTION_TOKEN solo necesita Contents + Workflows (write)
-      # sobre este repositorio; no recibe permisos para PRs ni estados.
+      - name: Check out the exact validated commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # La deploy key tiene escritura exclusivamente en este repositorio. Se
+      # usa solo para mover test; la proteccion de main sigue exigiendo PR.
+      - name: Configure the promotion key
+        shell: bash
+        env:
+          PROMOTION_DEPLOY_KEY: ${{ secrets.PROMOTION_DEPLOY_KEY }}
+        run: |
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$PROMOTION_DEPLOY_KEY" > "$HOME/.ssh/promotion_key"
+          chmod 600 "$HOME/.ssh/promotion_key"
+          printf '%s\n' \
+            'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' \
+            > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
       - name: Fast-forward test to the exact validated commit
         id: advance_test
-        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
-        with:
-          github-token: ${{ secrets.PROMOTION_TOKEN }}
-          result-encoding: string
-          script: |
-            const { owner, repo } = context.repo;
-            const testedSha = context.payload.workflow_run.head_sha;
+        shell: bash
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          GIT_SSH_COMMAND: >-
+            ssh -i "$HOME/.ssh/promotion_key" -o IdentitiesOnly=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+        run: |
+          remote="git@github.com:${GITHUB_REPOSITORY}.git"
+          develop_sha="$(git ls-remote "$remote" refs/heads/develop | cut -f1)"
 
-            const { data: develop } = await github.rest.repos.getBranch({
-              owner,
-              repo,
-              branch: "develop",
-            });
+          if [[ "$develop_sha" != "$TESTED_SHA" ]]; then
+            echo "Skipping stale CI result $TESTED_SHA; develop is now $develop_sha."
+            echo "result=stale" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-            if (develop.commit.sha !== testedSha) {
-              core.notice(
-                `Skipping stale CI result ${testedSha}; develop is now ${develop.commit.sha}.`
-              );
-              return "stale";
-            }
+          test_sha="$(git ls-remote "$remote" refs/heads/test | cut -f1)"
+          if [[ -n "$test_sha" && "$test_sha" != "$TESTED_SHA" ]]; then
+            git fetch --no-tags "$remote" \
+              "refs/heads/test:refs/remotes/promotion/test"
 
-            let testRef;
-            try {
-              const response = await github.rest.git.getRef({
-                owner,
-                repo,
-                ref: "heads/test",
-              });
-              testRef = response.data;
-            } catch (error) {
-              if (error.status !== 404) throw error;
-            }
+            if ! git merge-base --is-ancestor "$test_sha" "$TESTED_SHA"; then
+              echo "::error::test cannot be fast-forwarded to the validated develop commit. Resolve the branch divergence/conflict without force-pushing."
+              exit 1
+            fi
+          fi
 
-            if (!testRef) {
-              await github.rest.git.createRef({
-                owner,
-                repo,
-                ref: "refs/heads/test",
-                sha: testedSha,
-              });
-            } else if (testRef.object.sha !== testedSha) {
-              try {
-                await github.rest.git.updateRef({
-                  owner,
-                  repo,
-                  ref: "heads/test",
-                  sha: testedSha,
-                  force: false,
-                });
-              } catch (error) {
-                if (error.status === 422) {
-                  throw new Error(
-                    "test cannot be fast-forwarded to the validated develop commit. " +
-                    "Resolve the branch divergence/conflict without force-pushing."
-                  );
-                }
-                throw error;
-              }
-            }
+          if [[ "$test_sha" != "$TESTED_SHA" ]]; then
+            git push "$remote" "$TESTED_SHA:refs/heads/test"
+          fi
 
-            return "promoted";
+          current_develop="$(git ls-remote "$remote" refs/heads/develop | cut -f1)"
+          current_test="$(git ls-remote "$remote" refs/heads/test | cut -f1)"
+          if [[ "$current_develop" != "$TESTED_SHA" || "$current_test" != "$TESTED_SHA" ]]; then
+            echo "::error::develop or test moved during promotion; a new CI run must promote it."
+            exit 1
+          fi
+
+          echo "result=promoted" >> "$GITHUB_OUTPUT"
+
+      - name: Remove the promotion key
+        if: always()
+        shell: bash
+        run: rm -f "$HOME/.ssh/promotion_key"
 
       # El PR lo crea github-actions[bot], no la identidad del PAT. Así una
       # persona puede revisarlo y aprobarlo manualmente.
