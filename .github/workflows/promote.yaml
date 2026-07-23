@@ -8,8 +8,6 @@ on:
 permissions:
   actions: read
   contents: read
-  pull-requests: write
-  statuses: write
 
 concurrency:
   group: promote-develop-to-test
@@ -154,82 +152,3 @@ jobs:
         if: always()
         shell: bash
         run: rm -f "$HOME/.ssh/promotion_key"
-
-      # El PR lo crea github-actions[bot], no la identidad del PAT. Así una
-      # persona puede revisarlo y aprobarlo manualmente.
-      - name: Mark the release and open the production PR
-        if: steps.advance_test.outputs.result == 'promoted'
-        uses: actions/github-script@d746ffe35508b1917358783b479e04febd2b8f71 # v9.0.0
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const testedSha = context.payload.workflow_run.head_sha;
-            const sourceRun = context.payload.workflow_run.html_url;
-
-            const [{ data: develop }, { data: testRef }] = await Promise.all([
-              github.rest.repos.getBranch({ owner, repo, branch: "develop" }),
-              github.rest.git.getRef({ owner, repo, ref: "heads/test" }),
-            ]);
-
-            if (
-              develop.commit.sha !== testedSha ||
-              testRef.object.sha !== testedSha
-            ) {
-              throw new Error(
-                "develop or test moved after validation; a new CI run must promote it."
-              );
-            }
-
-            await github.rest.repos.createCommitStatus({
-              owner,
-              repo,
-              sha: testedSha,
-              state: "success",
-              context: "promotion/release-ready",
-              description: "CI passed and this exact commit was promoted to test",
-              target_url: sourceRun,
-            });
-
-            const title = "release: promover test a producción";
-            const body = [
-              "## Promoción a producción",
-              "",
-              `- Commit validado: \`${testedSha}\``,
-              `- CI de origen: ${sourceRun}`,
-              "- Rama validada y promovida: `develop` → `test`",
-              "",
-              "Este PR **no se fusiona automáticamente**. Requiere revisión y aceptación manual.",
-            ].join("\n");
-
-            const { data: openPullRequests } = await github.rest.pulls.list({
-              owner,
-              repo,
-              state: "open",
-              head: `${owner}:test`,
-              base: "main",
-              per_page: 10,
-            });
-
-            if (openPullRequests.length > 0) {
-              const pullRequest = openPullRequests[0];
-              await github.rest.pulls.update({
-                owner,
-                repo,
-                pull_number: pullRequest.number,
-                title,
-                body,
-              });
-              core.notice(`Updated existing production PR #${pullRequest.number}.`);
-            } else {
-              const { data: pullRequest } = await github.rest.pulls.create({
-                owner,
-                repo,
-                title,
-                head: "test",
-                base: "main",
-                body,
-                draft: false,
-                maintainer_can_modify: false,
-              });
-              core.notice(`Opened production PR #${pullRequest.number}.`);
-            }

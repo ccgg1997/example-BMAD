@@ -1,0 +1,49 @@
+name: Test screen policy
+
+on:
+  push:
+    branches: [test]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-screen-policy
+  cancel-in-progress: true
+
+jobs:
+  reject-bmad:
+    name: Reject bmad on registro or resumen
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out test
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Reject bmad in test screen sources
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          screen_sources=(
+            "app/(app)/registro"
+            "app/(app)/resumen"
+          )
+
+          if grep \
+            --recursive \
+            --fixed-strings \
+            --ignore-case \
+            --line-number \
+            --with-filename \
+            "bmad" \
+            "${screen_sources[@]}"; then
+            echo "::error::The forbidden word 'bmad' appears in /registro or /resumen screen sources"
+            exit 1
+          fi
+
+          echo "The /registro and /resumen screen sources do not contain 'bmad'."
