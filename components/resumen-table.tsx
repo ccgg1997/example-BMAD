@@ -1,9 +1,10 @@
+import { CircleDollarSign, Package, Tag } from "lucide-react";
 import { Accordion } from "@/components/ui/accordion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { RepartidorAccordionRow } from "@/components/repartidor-accordion-row";
 import type { ResumenPorRepartidor } from "@/lib/services/resumen";
 
-function formatearPesos(valor: number): string {
+export function formatearPesos(valor: number): string {
   return new Intl.NumberFormat("es-CO", {
     style: "currency",
     currency: "COP",
@@ -13,14 +14,16 @@ function formatearPesos(valor: number): string {
 
 export function TarifaVigenteCard({ tarifa }: { tarifa: number }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm text-muted-foreground">Tarifa vigente</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-2xl font-semibold">{formatearPesos(tarifa)}</p>
-        <p className="text-sm text-muted-foreground">por domicilio</p>
-      </CardContent>
+    <Card className="flex flex-row items-center gap-3 bg-accent p-4">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
+        <Tag className="size-5" />
+      </span>
+      <div>
+        <p className="text-sm text-muted-foreground">Tarifa vigente</p>
+        <p className="text-xl font-bold">
+          {formatearPesos(tarifa)} <span className="text-sm font-normal">por domicilio</span>
+        </p>
+      </div>
     </Card>
   );
 }
@@ -33,17 +36,26 @@ export function TotalesSemanaCard({
   valorAPagar: number;
 }) {
   return (
-    <Card>
-      <CardContent className="flex justify-between gap-4 pt-6">
+    <Card className="flex flex-row items-center justify-around gap-4 p-4">
+      <div className="flex items-center gap-3">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+          <Package className="size-5" />
+        </span>
         <div>
-          <p className="text-2xl font-semibold">{cantidad}</p>
-          <p className="text-sm text-muted-foreground">pedidos esta semana</p>
+          <p className="text-xl font-bold text-primary">{cantidad}</p>
+          <p className="text-xs text-muted-foreground">pedidos esta semana</p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-semibold">{formatearPesos(valorAPagar)}</p>
-          <p className="text-sm text-muted-foreground">por pagar</p>
+      </div>
+      <div className="h-10 w-px bg-border" />
+      <div className="flex items-center gap-3">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-primary">
+          <CircleDollarSign className="size-5" />
+        </span>
+        <div>
+          <p className="text-xl font-bold text-primary">{formatearPesos(valorAPagar)}</p>
+          <p className="text-xs text-muted-foreground">por pagar</p>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }
@@ -64,6 +76,7 @@ export function ResumenDomicilios({ resumen }: ResumenDomiciliosProps) {
             key={fila.repartidor.id}
             repartidorId={fila.repartidor.id}
             nombre={fila.repartidor.nombre}
+            activo={fila.repartidor.activo}
             cantidad={fila.cantidad}
             valorAPagar={fila.valorAPagar}
             pedidos={fila.pedidos}

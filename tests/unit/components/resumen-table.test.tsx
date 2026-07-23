@@ -34,8 +34,8 @@ describe("ResumenDomicilios", () => {
 
     expect(screen.getByText("Carlos")).toBeInTheDocument();
     expect(screen.getByText("Diego")).toBeInTheDocument();
-    expect(screen.getByText(/3 pedidos/)).toBeInTheDocument();
-    expect(screen.getByText(/5 pedidos/)).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
   });
 });
 

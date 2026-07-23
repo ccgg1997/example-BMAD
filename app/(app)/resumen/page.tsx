@@ -22,11 +22,14 @@ export default async function ResumenPage() {
   );
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-4">
-      <h1 className="text-lg font-semibold">Resumen de Domicilios</h1>
+    <>
+      <div>
+        <h1 className="text-2xl leading-tight font-bold">Resumen de domicilios</h1>
+        <p className="text-sm text-muted-foreground">Semana actual</p>
+      </div>
       <TarifaVigenteCard tarifa={tarifaVigente} />
       <TotalesSemanaCard cantidad={totales.cantidad} valorAPagar={totales.valorAPagar} />
       <ResumenDomicilios resumen={resumen} />
-    </main>
+    </>
   );
 }

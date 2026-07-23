@@ -14,9 +14,12 @@ export default async function RegistroPage() {
   });
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-4">
-      <h1 className="text-lg font-semibold">Registro de Salida</h1>
+    <>
+      <div>
+        <h1 className="text-2xl leading-tight font-bold">Registro de salida</h1>
+        <p className="text-sm text-muted-foreground">Registra pedidos rápidamente</p>
+      </div>
       <RegistroSalidaForm repartidores={repartidores} />
-    </main>
+    </>
   );
 }
