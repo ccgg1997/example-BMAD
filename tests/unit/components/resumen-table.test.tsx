@@ -4,8 +4,28 @@ import { ResumenDomicilios, TotalesSemanaCard } from "@/components/resumen-table
 import type { ResumenPorRepartidor } from "@/lib/services/resumen";
 
 const mockResumen: ResumenPorRepartidor[] = [
-  { repartidor: { id: "1", nombre: "Carlos", activo: true }, cantidad: 3, valorAPagar: 3000 },
-  { repartidor: { id: "2", nombre: "Diego", activo: true }, cantidad: 5, valorAPagar: 5000 },
+  {
+    repartidor: { id: "1", nombre: "Carlos", activo: true },
+    cantidad: 3,
+    valorAPagar: 3000,
+    pedidos: [
+      { numeroPedido: 101, registradoEn: "2026-07-20T10:00:00.000Z" },
+      { numeroPedido: 102, registradoEn: "2026-07-20T11:00:00.000Z" },
+      { numeroPedido: 103, registradoEn: "2026-07-20T12:00:00.000Z" },
+    ],
+  },
+  {
+    repartidor: { id: "2", nombre: "Diego", activo: true },
+    cantidad: 5,
+    valorAPagar: 5000,
+    pedidos: [
+      { numeroPedido: 201, registradoEn: "2026-07-20T09:00:00.000Z" },
+      { numeroPedido: 202, registradoEn: "2026-07-20T09:30:00.000Z" },
+      { numeroPedido: 203, registradoEn: "2026-07-20T10:00:00.000Z" },
+      { numeroPedido: 204, registradoEn: "2026-07-20T10:30:00.000Z" },
+      { numeroPedido: 205, registradoEn: "2026-07-20T11:00:00.000Z" },
+    ],
+  },
 ];
 
 describe("ResumenDomicilios", () => {
@@ -14,8 +34,8 @@ describe("ResumenDomicilios", () => {
 
     expect(screen.getByText("Carlos")).toBeInTheDocument();
     expect(screen.getByText("Diego")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("5")).toBeInTheDocument();
+    expect(screen.getByText(/3 pedidos/)).toBeInTheDocument();
+    expect(screen.getByText(/5 pedidos/)).toBeInTheDocument();
   });
 });
 

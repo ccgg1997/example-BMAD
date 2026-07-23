@@ -1,12 +1,6 @@
+import { Accordion } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { RepartidorAccordionRow } from "@/components/repartidor-accordion-row";
 import type { ResumenPorRepartidor } from "@/lib/services/resumen";
 
 function formatearPesos(valor: number): string {
@@ -60,25 +54,22 @@ interface ResumenDomiciliosProps {
 
 export function ResumenDomicilios({ resumen }: ResumenDomiciliosProps) {
   return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Repartidor</TableHead>
-            <TableHead className="text-right">Pedidos</TableHead>
-            <TableHead className="text-right">Valor a pagar</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {resumen.map((fila) => (
-            <TableRow key={fila.repartidor.id}>
-              <TableCell>{fila.repartidor.nombre}</TableCell>
-              <TableCell className="text-right">{fila.cantidad}</TableCell>
-              <TableCell className="text-right">{formatearPesos(fila.valorAPagar)}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <Card className="px-4">
+      {/* type="multiple": varios repartidores pueden quedar expandidos a la
+          vez — no hay respuesta del propietario sobre si debe ser exclusivo,
+          así que se implementa el comportamiento más simple (Story 2.3). */}
+      <Accordion type="multiple">
+        {resumen.map((fila) => (
+          <RepartidorAccordionRow
+            key={fila.repartidor.id}
+            repartidorId={fila.repartidor.id}
+            nombre={fila.repartidor.nombre}
+            cantidad={fila.cantidad}
+            valorAPagar={fila.valorAPagar}
+            pedidos={fila.pedidos}
+          />
+        ))}
+      </Accordion>
     </Card>
   );
 }
