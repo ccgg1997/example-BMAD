@@ -18,12 +18,22 @@ This project uses the **BMad Method** (agentic planning framework, `.bmad-core/`
 - Standard loop for future dev work: **SM** drafts next story from the epic → **Dev** implements against the story's acceptance criteria → **QA** reviews (`.bmad-core/tasks/review-story.md`, gate results recorded per `qa-gate-tmpl.yaml`). Use `/BMad:agents:sm`, `/BMad:agents:dev`, `/BMad:agents:qa` to invoke these personas.
 - `docs/architecture/coding-standards.md`, `tech-stack.md`, and `unified-project-structure.md` are marked as "always load" for the Dev agent (`devLoadAlwaysFiles` in core-config.yaml) — read these before writing any app code.
 
-### Jira mirror
+### Planning destination and tracker integrations
 
-Progress is mirrored to Jira through two skills (global, `~/.claude/skills/`):
+Before creating, updating, synchronizing, or publishing any planning artifact (roadmap, epic, story, task, backlog, sprint, acceptance criteria, or status), require the user to explicitly choose the target: **Jira** or **Azure DevOps**.
+
+- If the target is missing, ask which tracker to use before performing any external write.
+- Do not infer the target from installed MCP servers, previous work, repository history, or an existing mirror.
+- Do not publish to both trackers unless the user explicitly requests both.
+- A request explicitly limited to local BMad files may remain local without selecting an external tracker.
+- Read-only requests that already name Jira or Azure DevOps do not require another destination question.
+
+When the user selects **Jira**, use these two skills (global, `~/.claude/skills/`):
 
 - `crear-stories-jira` — builds the Epic → Story → Subtask hierarchy in Jira from `docs/prd/epic-*.md` + `docs/stories/*.story.md`. Run once per new/updated story before dev work starts; idempotent (searches by summary before creating).
 - `flujo-tarea-jira` — invoke every time the Dev agent starts or finishes a Task/Subtask or a full story during `develop-story`. On start: transitions the matching Jira issue to "in progress" (only sets `Status: InProgress` in the `.story.md` on the story's first task). On finishing a task: marks its checkbox `[x]`, updates File List, commits + pushes that increment, transitions the Jira Subtask to Done. On finishing the whole story: runs `story-dod-checklist`, sets `.story.md` `Status` to `Review` or `Done`, commits/pushes, and transitions the Jira Story issue accordingly. Never creates Jira issues itself (that's `crear-stories-jira`'s job) and never guesses transition names — always reads them via `getTransitionsForJiraIssue` first.
+
+When the user selects **Azure DevOps**, use the global skill `manage-azure-devops` (`~/.codex/skills/manage-azure-devops/SKILL.md`) and the `azure_devops` MCP. Read the current project state before writing, avoid duplicates, apply only requested changes, and verify every write with a follow-up read. Do not modify Jira unless the user explicitly requests both trackers.
 
 ## Planned architecture (not yet built)
 
