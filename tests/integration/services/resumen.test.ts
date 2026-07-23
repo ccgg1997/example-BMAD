@@ -4,6 +4,14 @@ import { obtenerResumen } from "@/lib/services/resumen";
 
 const numerosCreados: number[] = [];
 
+// Base random en [830000, 839999] — rango propio de este archivo, disjunto del
+// de los otros tests de integración (registros ≤ 829999, unique ≥ 900000).
+// El contador es monotónico y NO se reinicia entre tests, así cada numeroPedido
+// es único durante toda la corrida del archivo (el `random + length` anterior sí
+// se reiniciaba en afterEach y podía colisionar con el random del test siguiente).
+const numeroBase = 830_000 + Math.floor(Math.random() * 10_000);
+let contadorNumero = 0;
+
 afterEach(async () => {
   if (numerosCreados.length > 0) {
     await prisma.registroSalida.deleteMany({ where: { numeroPedido: { in: numerosCreados } } });
@@ -12,7 +20,8 @@ afterEach(async () => {
 });
 
 async function crearRegistroDirecto(repartidorId: string, tarifaAplicada: number) {
-  const numeroPedido = 830_000 + Math.floor(Math.random() * 9_000) + numerosCreados.length;
+  const numeroPedido = numeroBase + contadorNumero;
+  contadorNumero += 1;
   numerosCreados.push(numeroPedido);
   return prisma.registroSalida.create({ data: { repartidorId, numeroPedido, tarifaAplicada } });
 }
@@ -33,10 +42,11 @@ describe("obtenerResumen", () => {
   });
 
   test("usa tarifaAplicada (snapshot) de cada registro, no la tarifa vigente actual", async () => {
-    // No se muta `configuracionSistema` (singleton compartido: otros archivos de
-    // test corren en paralelo y leen la tarifa vigente). En su lugar, se crean
-    // registros con `tarifaAplicada` explícitas distintas entre sí y se verifica
-    // que la suma usa exactamente esos valores guardados, no un recálculo.
+    // No se muta `configuracionSistema` (fila singleton compartida por toda la
+    // app). En su lugar, se crean registros con `tarifaAplicada` explícitas
+    // distintas entre sí y se verifica que la suma usa exactamente esos valores
+    // guardados, no un recálculo con la tarifa vigente. Se mide como diff contra
+    // un baseline para no depender de que el repartidor arranque en 0.
     const repartidor = await prisma.repartidor.findFirstOrThrow();
     const antes = await obtenerResumen();
     const valorAntes = antes.find((r) => r.repartidor.id === repartidor.id)?.valorAPagar ?? 0;
